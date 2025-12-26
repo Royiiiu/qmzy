@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport元标签：适配移动端 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 页面标题：替换为你的学号+姓名 -->
+  <title>商品详情 - 25216950131+余毅</title>
+  <!-- 引入全局样式文件：路径正确 -->
+  <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+  <!-- 导航栏区域：显示项目名称和跳转链接 -->
+  <div class="nav">
+    <div>余毅 25216950131 - 电商购物车</div> <!-- 项目名称 -->
+    <!-- 跳转链接：返回列表（index.html）、购物车（cart.html），均和detail.html同级 -->
+    <div><a href="index.html">返回列表</a> | <a href="cart.html">购物车</a></div>
+  </div>
+
+  <!-- ===================== 商品详情区域 ===================== -->
+  <!-- 商品详情容器：goods-detail-container类美化，分栏显示 -->
+  <div class="goods-detail-container">
+    <!-- 商品图片栏：goods-detail-img类美化 -->
+    <div class="goods-detail-img">
+      <!-- 商品图片：id为goodsImg，用于JS设置图片路径 -->
+      <img id="goodsImg" src="" alt="商品图片">
+    </div>
+    <!-- 商品信息栏：goods-detail-info类美化 -->
+    <div class="goods-detail-info">
+      <!-- 商品名称：id为goodsName，用于JS设置名称 -->
+      <h2 id="goodsName"></h2>
+      <!-- 商品价格容器：goods-price-wrap类美化 -->
+      <div class="goods-price-wrap">
+        <span>价格：</span> <!-- 价格标签 -->
+        <!-- 商品价格：id为goodsPrice，用于JS设置价格 -->
+        <span id="goodsPrice"></span>
+      </div>
+
+      <!-- 商品介绍容器：goods-intro-wrap类美化 -->
+      <div class="goods-intro-wrap">
+        <h4>商品介绍</h4> <!-- 介绍标题 -->
+        <!-- 商品介绍文本：id为goodsIntro，用于JS设置介绍内容 -->
+        <p id="goodsIntro"></p>
+      </div>
+
+      <!-- 商品数量选择容器：goods-num-wrap类美化 -->
+      <div class="goods-num-wrap">
+        <label>数量：</label> <!-- 数量标签 -->
+        <!-- 数量输入框：id为goodsNum，默认值1，最小值1 -->
+        <input type="number" id="goodsNum" value="1" min="1">
+      </div>
+
+      <!-- 加入购物车按钮：id为addCartBtn，绑定点击事件；btn类美化 -->
+      <button class="btn" id="addCartBtn">加入购物车</button>
+    </div>
+  </div>
+
+  <!-- 引入jQuery库：路径正确 -->
+  <script src="js/jquery-3.7.1.min.js"></script>
+
+  <script>
+    // jQuery入口函数：DOM加载完成后执行
+    $(function() {
+      // ===================== 获取URL参数（商品id） =====================
+      // 调用getUrlParam函数，获取URL中的id参数（如detail.html?id=1，获取1）
+      var goodsId = getUrlParam("id");
+      // 校验：商品id不存在，提示并跳转到商品列表页
+      if (!goodsId) {
+        alert("商品ID不存在！");
+        window.location.href = "index.html";
+      }
+
+      // ===================== 商品数据定义 =====================
+      // 商品对象：key为商品id，value为商品详情（和列表页保持一致）
+      var goodsList = {
+        1: {
+          id:1, 
+          name:"PS5", 
+          price:2999, 
+          img:"images/goods1.jpg",
+          intro:"索尼PS5游戏主机，搭载定制AMD 8核Zen 2 CPU，支持4K电视游戏、高达120fps和120Hz输出，配备超高速SSD，沉浸式触觉反馈、自适应扳机和Tempest 3D音效技术，带来次世代游戏体验。"
+        },
+        2: {
+          id:2, 
+          name:"iPhone17", 
+          price:5999, 
+          img:"images/goods2.jpg",
+          intro:"iPhone17搭载A19仿生芯片，6.1英寸超视网膜XDR显示屏，支持ProMotion自适应刷新率，4800万像素主摄，全天候续航，IP68级防水，搭载最新iOS系统，流畅度拉满。"
+        },
+        3: {
+          id:3, 
+          name:"雷蛇毒蝰V3Pro", 
+          price:999, 
+          img:"images/goods3.jpg",
+          intro:"雷蛇毒蝰V3 Pro轻量化无线游戏鼠标，仅54克超轻设计，Focus Pro 30K光学传感器，第二代雷蛇光学微动，70小时超长续航，人体工学设计，适配各类游戏场景。"
+        },
+        4: {
+          id:4, 
+          name:"讯景9070GRE", 
+          price:3599, 
+          img:"images/goods4.jpg",
+          intro:"讯景RX 9070 GRE独立显卡，8GB GDDR6显存，128bit位宽，支持光线追踪、FSR 3.0技术，7nm制程工艺，低功耗设计，适配1080P/2K分辨率游戏，性价比拉满。"
+        },
+        5: {
+          id:5, 
+          name:"威刚D500G内存条16*2", 
+          price:2299, 
+          img:"images/goods5.jpg",
+          intro:"威刚XPG D500G DDR5内存条套装（16GB*2），频率6000MHz，CL30时序，采用原厂颗粒，散热马甲设计，支持XMP 3.0一键超频，适配台式机电竞主机。"
+        }
+      };
+      // 根据商品id获取对应商品数据
+      var goods = goodsList[goodsId];
+      // 校验：商品不存在，提示并跳转到商品列表页
+      if (!goods) {
+        alert("商品不存在！");
+        window.location.href = "index.html";
+      }
+
+      // ===================== 渲染商品信息 =====================
+      $("#goodsImg").attr("src", goods.img); // 设置商品图片路径
+      $("#goodsName").text(goods.name); // 设置商品名称
+      $("#goodsPrice").text("¥" + goods.price); // 设置商品价格（添加¥符号，格式统一）
+      $("#goodsIntro").text(goods.intro); // 设置商品介绍内容
+
+      // ===================== 加入购物车功能 =====================
+      // 为加入购物车按钮绑定点击事件
+      $("#addCartBtn").click(function() {
+        // 1. 获取用户输入的购买数量，转为数字类型
+        var num = parseInt($("#goodsNum").val());
+        
+        // 2. 数量合法性校验：
+        // isNaN(num)：判断是否为有效数字；num < 1：数量不能小于1
+        if (isNaN(num) || num < 1) {
+          alert("请输入有效的购买数量（≥1）！"); // 友好提示
+          $("#goodsNum").val(1); // 重置数量为1
+          return; // 终止后续代码执行
+        }
+
+        // 3. 获取本地购物车数据：
+        // localStorage存储的是字符串，需用JSON.parse转为数组；若无数据，初始化为空数组
+        var cart = JSON.parse(localStorage.getItem("cart")) || [];
+        
+        // 4. 检查商品是否已在购物车中：
+        // some()遍历数组，找到匹配id的商品则返回true，并累加数量
+        var isExist = cart.some(function(item) {
+          if (item.id === goods.id) { // 商品已在购物车
+            item.num += num; // 数量累加
+            return true; // 终止遍历
+          }
+        });
+        
+        // 5. 商品未在购物车中：新增商品到购物车数组
+        if (!isExist) {
+          cart.push({id:goods.id, name:goods.name, price:goods.price, num:num});
+        }
+
+        // 6. 保存购物车数据到localStorage：
+        // localStorage仅支持字符串，需用JSON.stringify转为字符串
+        localStorage.setItem("cart", JSON.stringify(cart));
+        
+        // 7. 提示加入购物车成功
+        alert("加入购物车成功！");
+      });
+    });
+
+    /**
+     * URL参数获取函数：兼容所有浏览器，获取URL中的指定参数值
+     * @param {string} name - 要获取的参数名（如id）
+     * @returns {string|null} - 参数值，不存在则返回null
+     */
+    function getUrlParam(name) {
+      // 正则表达式：匹配URL中?后的参数（如?id=1&name=test，匹配id=1）
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+      // 截取URL中?后的部分，匹配正则
+      var r = window.location.search.substr(1).match(reg);
+      // 匹配成功：返回解码后的参数值；失败：返回null
+      if (r != null) return unescape(r[2]);
+      return null;
+    }
+  </script>
+</body>
+</html>

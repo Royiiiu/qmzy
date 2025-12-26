@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport元标签：适配移动端 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 页面标题：替换为你的学号+姓名 -->
+  <title>购物车 - 学号+姓名</title>
+  <!-- 引入全局样式文件：路径正确 -->
+  <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+  <!-- 导航栏区域：显示项目名称和返回列表链接 -->
+  <div class="nav">
+    <div>Web大作业 - 电商购物车</div> <!-- 项目名称 -->
+    <!-- 返回商品列表链接：index.html和cart.html同级 -->
+    <div><a href="index.html">返回商品列表</a></div>
+  </div>
+
+  <!-- ===================== 购物车区域 ===================== -->
+  <!-- 购物车主容器：固定宽度900px，居中显示 -->
+  <div style="width: 900px; margin: 50px auto;">
+    <h3 style="color: #333; margin-bottom: 20px;">我的购物车</h3> <!-- 购物车标题 -->
+    
+    <!-- 购物车表格：cart-table类美化 -->
+    <table class="cart-table">
+      <!-- 表格表头：定义列含义 -->
+      <tr>
+        <th>商品名称</th> <!-- 商品名称列 -->
+        <th>单价</th> <!-- 单价列 -->
+        <th>数量</th> <!-- 数量列 -->
+        <th>小计</th> <!-- 小计列（单价×数量） -->
+        <th>操作</th> <!-- 操作列（删除） -->
+      </tr>
+      <!-- 表格内容：id为cartList，用于JS动态渲染购物车商品 -->
+      <tbody id="cartList"></tbody>
+    </table>
+    
+    <!-- 购物车总价区域：cart-total类美化 -->
+    <div class="cart-total">
+      总价：<span id="totalPrice">¥0</span> <!-- 总价：id为totalPrice，用于JS设置总价 -->
+    </div>
+  </div>
+
+  <!-- 引入jQuery库：路径正确 -->
+  <script src="js/jquery-3.7.1.min.js"></script>
+
+  <script>
+    // jQuery入口函数：DOM加载完成后执行
+    $(function() {
+      // 初始化渲染购物车：页面加载完成后立即显示购物车内容
+      renderCart();
+    });
+
+    /**
+     * 购物车渲染函数：从localStorage获取购物车数据，生成表格行并计算总价
+     */
+    function renderCart() {
+      // 1. 获取本地购物车数据：转为数组，无数据则初始化为空数组
+      var cart = JSON.parse(localStorage.getItem("cart")) || [];
+      // 2. 获取购物车表格内容容器
+      var cartList = $("#cartList");
+      // 3. 初始化总价为0
+      var totalPrice = 0;
+
+      // 4. 清空表格内容：避免重复渲染
+      cartList.empty();
+
+      // 5. 空购物车处理：如果购物车为空，显示提示信息
+      if (cart.length === 0) {
+        // 插入空购物车提示行：colspan=5，跨5列显示
+        cartList.append(`
+          <tr>
+            <td colspan="5" style="padding: 30px; color: #999;">您的购物车为空，快去挑选商品吧！</td>
+          </tr>
+        `);
+        // 设置总价为¥0
+        $("#totalPrice").text("¥0");
+        return; // 终止函数，避免后续循环
+      }
+
+      // 6. 遍历购物车数组，生成表格行
+      cart.forEach(function(item, index) {
+        // 6.1 计算单个商品小计：单价×数量
+        var subtotal = item.price * item.num;
+        // 6.2 累加小计到总价
+        totalPrice += subtotal;
+
+        // 6.3 拼接表格行HTML：
+        var tr = `
+          <tr>
+            <td>${item.name}</td> <!-- 商品名称 -->
+            <td>¥${item.price}</td> <!-- 商品单价 -->
+            <td>
+              <!-- 减数量按钮：点击调用changeNum，传入索引和-1；btn类美化，缩小尺寸 -->
+              <button onclick="changeNum(${index}, -1)" class="btn" style="padding: 2px 8px;">-</button>
+              ${item.num} <!-- 当前数量 -->
+              <!-- 加数量按钮：点击调用changeNum，传入索引和1；btn类美化，缩小尺寸 -->
+              <button onclick="changeNum(${index}, 1)" class="btn" style="padding: 2px 8px;">+</button>
+            </td>
+            <td>¥${subtotal}</td> <!-- 商品小计 -->
+            <!-- 删除按钮：点击调用deleteGoods，传入索引；btn类美化 -->
+            <td><button class="btn" onclick="deleteGoods(${index})">删除</button></td>
+          </tr>
+        `;
+        // 6.4 将表格行添加到表格中
+        cartList.append(tr);
+      });
+
+      // 7. 设置总价：添加¥符号，格式统一
+      $("#totalPrice").text("¥" + totalPrice);
+    }
+
+    /**
+     * 修改商品数量函数：调整购物车中指定商品的数量，保存后重新渲染
+     * @param {number} index - 商品在购物车数组中的索引
+     * @param {number} type - 调整类型：-1（减1）、1（加1）
+     */
+    function changeNum(index, type) {
+      // 1. 获取购物车数据
+      var cart = JSON.parse(localStorage.getItem("cart")) || [];
+      // 2. 空购物车校验：直接返回，避免报错
+      if (cart.length === 0) return;
+      // 3. 数量边界校验：数量不能小于1
+      if (cart[index].num + type < 1) {
+        alert("数量不能小于1！"); // 友好提示
+        return; // 终止函数
+      }
+      // 4. 调整数量：加/减1
+      cart[index].num += type;
+      // 5. 保存修改后的购物车数据到localStorage
+      localStorage.setItem("cart", JSON.stringify(cart));
+      // 6. 重新渲染购物车：更新页面显示
+      renderCart();
+    }
+
+    /**
+     * 删除商品函数：删除购物车中指定商品，保存后重新渲染
+     * @param {number} index - 商品在购物车数组中的索引
+     */
+    function deleteGoods(index) {
+      // 1. 获取购物车数据
+      var cart = JSON.parse(localStorage.getItem("cart")) || [];
+      // 2. 空购物车校验：直接返回，避免报错
+      if (cart.length === 0) return;
+      // 3. 删除指定索引的商品：splice(索引, 删除数量)
+      cart.splice(index, 1);
+      // 4. 保存删除后的购物车数据到localStorage
+      localStorage.setItem("cart", JSON.stringify(cart));
+      // 5. 重新渲染购物车：更新页面显示
+      renderCart();
+    }
+  </script>
+</body>
+</html>

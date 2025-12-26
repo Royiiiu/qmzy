@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品列表页</title>
+    <!-- 引入CSS样式文件：所有样式（轮播图/商品卡片）都在这，必须引入 -->
+    <link rel="stylesheet" href="css/common.css">
+    <!-- 引入jQuery库：简化DOM操作（如事件绑定、样式修改） -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+    <!-- 页面头部：用户信息+搜索框 -->
+    <header style="padding: 15px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div id="userInfo" style="margin-bottom: 10px;"></div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="searchInput" placeholder="请输入商品关键词搜索" style="padding: 8px; flex: 1; border: 1px solid #ddd; border-radius: 4px;">
+            <button id="searchBtn" class="btn" style="padding: 8px 15px;">搜索</button>
+            <button id="resetBtn" class="btn" style="padding: 8px 15px;">重置</button>
+        </div>
+    </header>
+
+    <!-- 轮播图区域：核心修复了方形图显示+切换速度 -->
+    <div class="banner">
+        <!-- 轮播图图片容器：5张图横向排列，ID用于JS控制偏移 -->
+        <div class="banner-img-wrapper" id="bannerWrapper">
+            <img src="images/banner1.jpg" alt="轮播图1" class="banner-img">
+            <img src="images/banner2.jpg" alt="轮播图2" class="banner-img">
+            <img src="images/banner3.jpg" alt="轮播图3" class="banner-img">
+            <img src="images/banner4.jpg" alt="轮播图4" class="banner-img">
+            <img src="images/banner5.jpg" alt="轮播图5" class="banner-img">
+        </div>
+        <!-- 左切换箭头：class用于样式，点击事件绑定在JS中 -->
+        <div class="banner-arrow banner-arrow-left">&lt;</div>
+        <!-- 右切换箭头 -->
+        <div class="banner-arrow banner-arrow-right">&gt;</div>
+        <!-- 轮播图指示器：data-index存储索引，用于点击切换 -->
+        <div class="banner-indicators">
+            <div class="banner-indicator active" data-index="0"></div>
+            <div class="banner-indicator" data-index="1"></div>
+            <div class="banner-indicator" data-index="2"></div>
+            <div class="banner-indicator" data-index="3"></div>
+            <div class="banner-indicator" data-index="4"></div>
+        </div>
+    </div>
+
+    <!-- 商品列表容器：动态渲染商品卡片，必须确保子元素有goods-card类 -->
+    <div id="goodsContainer" style="display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; justify-content: center;"></div>
+
+    <script>
+        // ===================== 全局变量（轮播图核心参数） =====================
+        var currentIndex = 0; // 当前轮播图索引（0=第一张，4=第五张）
+        var bannerCount = 5;  // 轮播图总数（必须和HTML中banner-img数量一致）
+        var bannerTimer = null; // 自动轮播定时器（初始为null）
+
+        // ===================== 轮播图切换函数（核心修复偏移计算） =====================
+        /**
+         * 切换到指定索引的轮播图
+         * @param {number} targetIndex - 目标索引（0-4）
+         * 修复点：偏移量= -targetIndex*20%，解决后续图片不显示问题
+         */
+        function switchBanner(targetIndex) {
+            // 边界校验：防止索引越界（左越界→最后一张，右越界→第一张）
+            if (targetIndex < 0) targetIndex = bannerCount - 1;
+            if (targetIndex >= bannerCount) targetIndex = 0;
+
+            // 计算偏移量：每张图占20%宽度（100%/5），偏移后显示对应图片
+            var translateX = -targetIndex * 20 + "%";
+            $("#bannerWrapper").css("transform", "translateX(" + translateX + ")");
+
+            // 更新指示器状态：激活当前索引的指示器
+            $(".banner-indicator").removeClass("active");
+            $(".banner-indicator[data-index='" + targetIndex + "']").addClass("active");
+
+            // 更新全局索引，保证下次切换基于正确位置
+            currentIndex = targetIndex;
+        }
+
+        // ===================== 自动轮播函数（修复切换速度：从3秒→5秒） =====================
+        function autoBanner() {
+            // 核心修改：3000（3秒）→5000（5秒），数值越大切换越慢
+            bannerTimer = setInterval(function() {
+                switchBanner(currentIndex + 1); // 切换到下一张
+            }, 5000); 
+        }
+
+        // ===================== jQuery入口函数（DOM加载完成后执行） =====================
+        $(function() {
+            // -------------------- 轮播图事件绑定 --------------------
+            // 左箭头点击：切换到上一张
+            $("#leftArrow").click(function() {
+                switchBanner(currentIndex - 1);
+            });
+            // 右箭头点击：切换到下一张
+            $("#rightArrow").click(function() {
+                switchBanner(currentIndex + 1);
+            });
+            // 指示器点击：切换到对应索引的轮播图
+            $(".banner-indicator").click(function() {
+                var targetIndex = parseInt($(this).attr("data-index"));
+                switchBanner(targetIndex);
+            });
+            // 鼠标悬浮轮播图：暂停自动轮播；离开：恢复
+            $(".banner").hover(
+                function() { clearInterval(bannerTimer); },
+                function() { autoBanner(); }
+            );
+            // 初始化自动轮播
+            autoBanner();
+
+            // -------------------- 登录状态校验 --------------------
+            var user = localStorage.getItem("loginUser");
+            if (!user) {
+                alert("请先完成登录，才能访问商品列表！");
+                window.location.href = "login.html";
+            } else {
+                $("#userInfo").html("欢迎：" + user + " | <a href='cart.html'>购物车</a>");
+            }
+
+            // -------------------- 商品数据定义 --------------------
+            var allGoods = [
+                {id:1, name:"PS5", price:2999, img:"images/goods1.jpg", intro:"索尼PS5游戏主机"},
+                {id:2, name:"iPhone17", price:5999, img:"images/goods2.jpg", intro:"iPhone17搭载A19芯片"},
+                {id:3, name:"雷蛇毒蝰V3Pro", price:999, img:"images/goods3.jpg", intro:"轻量化无线游戏鼠标"},
+                {id:4, name:"讯景9070GRE", price:3599, img:"images/goods4.jpg", intro:"RX 9070 GRE显卡"},
+                {id:5, name:"威刚D500G内存条16*2", price:2299, img:"images/goods5.jpg", intro:"DDR5内存条套装"}
+            ];
+
+            // -------------------- 商品渲染函数（核心修复：图片过大问题） --------------------
+            /**
+             * 渲染商品列表到页面
+             * @param {Array} goodsList - 要渲染的商品数组
+             * 关键修复：每个商品必须包裹在class="goods-card"的div中，否则样式不生效
+             */
+            function renderGoods(goodsList) {
+                // 清空容器并添加标题
+                $("#goodsContainer").html("<h3>商品列表</h3>");
+                // 无商品时显示提示
+                if (goodsList.length === 0) {
+                    $("#goodsContainer").append("<p style='color: #999; text-align: center; margin-top: 20px;'>未找到匹配的商品，请换个关键词试试</p>");
+                    return;
+                }
+                // 遍历商品，生成带goods-card类的卡片（核心：必须有这个class）
+                goodsList.forEach(function(goods) {
+                    var goodsCard = `
+                        <div class="goods-card"> <!-- 关键：这个class是样式生效的核心，不能删/改 -->
+                            <img src="${goods.img}" alt="${goods.name}"> <!-- 图片会被goods-card img样式限制尺寸 -->
+                            <h4>${goods.name}</h4>
+                            <p>价格：¥${goods.price}</p>
+                            <button class="btn" onclick="toDetail(${goods.id})">查看详情</button>
+                        </div>
+                    `;
+                    $("#goodsContainer").append(goodsCard);
+                });
+            }
+
+            // 初始化渲染所有商品
+            renderGoods(allGoods);
+
+            // -------------------- 搜索/重置按钮事件 --------------------
+            // 搜索按钮：根据关键词筛选商品
+            $("#searchBtn").click(function() {
+                var keyword = $("#searchInput").val().trim().toLowerCase();
+                var filteredGoods = allGoods.filter(function(goods) {
+                    return goods.name.toLowerCase().includes(keyword);
+                });
+                renderGoods(filteredGoods);
+            });
+            // 重置按钮：清空搜索框，渲染所有商品
+            $("#resetBtn").click(function() {
+                $("#searchInput").val("");
+                renderGoods(allGoods);
+            });
+
+            // -------------------- 滚动优化：滚动时暂停轮播，减少卡顿 --------------------
+            var scrollTimer = null;
+            window.addEventListener('scroll', function() {
+                document.body.classList.add('scrolling'); // 禁用所有过渡/动画
+                clearTimeout(scrollTimer);
+                // 滚动停止后100ms恢复
+                scrollTimer = setTimeout(function() {
+                    document.body.classList.remove('scrolling');
+                    if (!bannerTimer) autoBanner();
+                }, 100);
+                // 滚动时暂停轮播
+                if (bannerTimer) {
+                    clearInterval(bannerTimer);
+                    bannerTimer = null;
+                }
+            });
+        });
+
+        // ===================== 全局函数：跳转到商品详情页 =====================
+        window.toDetail = function(goodsId) {
+            window.location.href = "detail.html?id=" + goodsId;
+        };
+    </script>
+</body>
+</html>

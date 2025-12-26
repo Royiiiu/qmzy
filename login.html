@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录页</title>
+    <!-- 内联样式：直接写在页面里，不依赖外部CSS，确保100%生效 -->
+    <style>
+        /* ===================== 全局样式重置 ===================== */
+        * {
+            margin: 0; /* 清除所有元素默认外边距，避免浏览器自带样式干扰 */
+            padding: 0; /* 清除所有元素默认内边距 */
+            box-sizing: border-box; /* 盒模型：宽高包含边框/内边距，布局更可控 */
+            font-family: "Microsoft Yahei", sans-serif; /* 统一字体，避免乱码/丑字体 */
+        }
+        /* 页面背景：浅灰色，护眼且和登录卡片区分开 */
+        body {
+            background-color: #f5f5f5;
+        }
+        /* 页面大标题：居中显示，和登录卡片拉开间距 */
+        h2 {
+            text-align: center; /* 文字居中 */
+            margin: 30px 0; /* 上下间距30px，左右无 */
+            color: #333; /* 深灰色文字，不刺眼 */
+        }
+        /* ===================== 登录表单核心样式 ===================== */
+        .login-form {
+            width: 350px; /* 表单固定宽度，避免太宽/太窄 */
+            margin: 50px auto; /* 上下50px，左右自动（水平居中） */
+            background: #fff; /* 白色背景，突出表单 */
+            padding: 30px; /* 表单内边距，让内容不贴边 */
+            border-radius: 10px; /* 圆角，避免直角生硬 */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* 轻微阴影，提升立体感 */
+        }
+        /* 表单小标题：居中，和输入框拉开间距 */
+        .login-form h3 {
+            text-align: center; /* 文字居中 */
+            color: #333; /* 深灰色文字 */
+            margin-bottom: 25px; /* 下方间距25px，和第一个输入框分开 */
+        }
+        /* 每个输入项的容器：控制间距 */
+        .form-item {
+            margin-bottom: 20px; /* 每个输入项下方间距20px，避免挤在一起 */
+        }
+        /* 输入项标签（用户名/密码）：固定宽度，对齐 */
+        .form-item label {
+            display: inline-block; /* 行内块，可设置宽度 */
+            width: 70px; /* 固定宽度70px，让输入框对齐 */
+            color: #555; /* 中灰色文字，比标题浅一点 */
+        }
+        /* 输入框样式：适配表单宽度，有边框和内边距 */
+        .form-item input {
+            width: calc(100% - 80px); /* 宽度=表单宽度-标签宽度-间距，自动适配 */
+            padding: 8px 12px; /* 输入框内边距，打字不贴边 */
+            border: 1px solid #ddd; /* 浅灰色边框，不突兀 */
+            border-radius: 6px; /* 圆角，和表单风格统一 */
+        }
+        /* 按钮通用样式：登录按钮专用 */
+        .btn {
+            padding: 8px 20px; /* 按钮内边距，大小适中 */
+            background: #e63946; /* 主色调红色，和商品列表页按钮一致 */
+            color: #fff; /* 文字白色，对比明显 */
+            border: none; /* 去掉默认边框 */
+            border-radius: 6px; /* 圆角，和输入框统一 */
+            cursor: pointer; /* 鼠标悬浮显示手型，提示可点击 */
+        }
+        /* 按钮hover效果：加深红色，提升交互反馈 */
+        .btn:hover {
+            background: #d62839; /* 比默认红色深一点，有点击感 */
+        }
+        /* 提示信息样式：错误红色，居中显示 */
+        .tip {
+            color: red; /* 默认红色（错误提示） */
+            margin-top: 10px; /* 上方间距10px，和按钮分开 */
+            text-align: center; /* 文字居中，显眼 */
+        }
+    </style>
+    <!-- 引入jQuery：必须引入，否则登录按钮点击事件无效 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+    <!-- 页面大标题：和项目主题一致 -->
+    <h2>余毅 25216950131 - 电商购物车</h2>
+
+    <!-- 登录表单容器：套用上面的.login-form样式，核心容器 -->
+    <div class="login-form">
+        <!-- 表单小标题：明确功能 -->
+        <h3>用户登录</h3>
+
+        <!-- 用户名输入项：.form-item样式控制布局 -->
+        <div class="form-item">
+            <label>用户名：</label> <!-- 标签，固定宽度70px -->
+            <input type="text" id="username" placeholder="请输入用户名"> <!-- 输入框，适配宽度 -->
+        </div>
+
+        <!-- 密码输入项：.form-item样式控制布局，&nbsp;&nbsp;是空格，让“密码”和“用户名”对齐 -->
+        <div class="form-item">
+            <label>密&nbsp;&nbsp;码：</label> <!-- 标签，加两个空格，和“用户名”宽度一致 -->
+            <input type="password" id="password" placeholder="请输入密码"> <!-- 密码输入框，隐藏输入内容 -->
+        </div>
+
+        <!-- 登录按钮容器：单独加text-align:center让按钮居中 -->
+        <div class="form-item" style="text-align: center;">
+            <button class="btn" id="loginBtn">登录</button> <!-- 登录按钮，套用.btn样式 -->
+        </div>
+
+        <!-- 提示信息区域：显示错误/成功提示，套用.tip样式 -->
+        <div id="tip" class="tip"></div>
+    </div>
+
+    <script>
+        // ===================== 登录逻辑（jQuery入口函数：DOM加载完成后执行） =====================
+        $(function() {
+            // 给登录按钮绑定点击事件
+            $("#loginBtn").click(function() {
+                // 1. 获取输入框的值，trim()去除首尾空格（避免用户输入空空格）
+                var username = $("#username").val().trim();
+                var password = $("#password").val().trim();
+                var tip = $("#tip"); // 获取提示信息区域，方便后续修改内容
+
+                // 2. 输入校验：用户名不能为空
+                if (username === "") {
+                    tip.text("用户名不能为空！"); // 显示错误提示
+                    return; // 终止函数，不执行后续逻辑
+                }
+
+                // 3. 输入校验：密码不能为空且长度≥6位
+                if (password === "" || password.length < 6) {
+                    tip.text("密码不能为空且长度≥6位！"); // 显示错误提示
+                    return; // 终止函数，不执行后续逻辑
+                }
+
+                // 4. 模拟登录成功：将用户名存入localStorage（商品列表页会读取这个值判断是否登录）
+                localStorage.setItem("loginUser", username);
+                tip.text("登录成功！正在跳转..."); // 显示成功提示
+                tip.css("color", "green"); // 成功提示改为绿色，区分错误
+
+                // 5. 1秒后跳转到商品列表页（index.html）
+                setTimeout(function() {
+                    window.location.href = "index.html"; // 页面跳转
+                }, 1000); // 1000毫秒=1秒，给用户看成功提示的时间
+            });
+        });
+    </script>
+</body>
+</html>
